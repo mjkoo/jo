@@ -1,0 +1,6 @@
+project: rnshah9/jo
+target: jo
+tests: null
+
+cmds:
+  - cmd: /bin/jo
