@@ -1,6 +1,5 @@
-project: rnshah9/jo
+project: jo
 target: jo
-tests: null
 
 cmds:
-  - cmd: /bin/jo
+  - cmd: /install/bin/jo
