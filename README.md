@@ -110,7 +110,7 @@ _jo_ builds and passes all tests on AIX 7.1 using the _autoconf_, _automake_, _g
 * [ArchLinux](https://archlinux.org/packages/extra/x86_64/jo/)
 * [OpenBSD](http://openports.se/textproc/jo)
 * [FreeBSD](https://www.freshports.org/textproc/jo)
-* [Guix](https://guix.gnu.org/packages/jo-1.4/)
+* [Guix](https://packages.guix.gnu.org/packages/jo/)
 * [pkgsrc](http://pkgsrc.se/textproc/jo)
 * [repology.org](https://repology.org/metapackage/jo/versions)
 * [Docker](https://hub.docker.com/repository/docker/jpmens/jo)
