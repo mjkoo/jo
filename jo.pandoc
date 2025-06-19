@@ -26,7 +26,7 @@ element is not created.
 *jo* normally treats _key_ as a literal string value. If the `-d` option is specified, _key_ will be
 interpreted as an _object path_, whose individual components are separated by the first character of _keydelim_.
 
-*jo* normally treats _value_ as a literal string value, unless it begins with one of the following characters:
+*jo* first tries to parse _value_ as a JSON value. If that fails, it treats _value_ as a literal string value, unless it begins with one of the following characters:
 
 value action
 ----- ------
@@ -89,13 +89,13 @@ Pretty-print an array with a list of files in the current directory:
 	 "json.h"
 	]
 
-Create objects within objects; this works because if the first character of value is an open brace or a bracket we attempt to decode the remainder as JSON. Beware spaces in strings ...
+Create objects within objects. Beware spaces in strings; it's generally a good idea to double-quote nested *jo* invocations:
 
-	$ jo -p name=JP object=$(jo fruit=Orange hungry@0 point=$(jo x=10 y=20 list=$(jo -a 1 2 3 4 5)) number=17) sunday@0
+	$ jo -p name=JP object="$(jo fruit=Blood\ Orange hungry@0 point="$(jo x=10 y=20 list="$(jo -a 1 2 3 4 5)")" number=17)" sunday@0
 	{
 	 "name": "JP",
 	 "object": {
-	  "fruit": "Orange",
+	  "fruit": "Blood Orange",
 	  "hungry": false,
 	  "point": {
 	   "x": 10,

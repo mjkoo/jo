@@ -1,3 +1,7 @@
+---
+title: JO(1) User Manuals
+---
+
 # NAME
 
 jo - JSON output from a shell
@@ -5,7 +9,7 @@ jo - JSON output from a shell
 # SYNOPSIS
 
 jo \[-p\] \[-a\] \[-B\] \[-D\] \[-e\] \[-n\] \[-v\] \[-V\] \[-d
-keydelim\] \[-f file\] \[--\] \[ \[-s|-n|-b\] word ...\]
+keydelim\] \[-f file\] \[--\] \[ \[-s\|-n\|-b\] word ...\]
 
 # DESCRIPTION
 
@@ -30,11 +34,12 @@ is specified, *key* will be interpreted as an *object path*, whose
 individual components are separated by the first character of
 *keydelim*.
 
-*jo* normally treats *value* as a literal string value, unless it begins
-with one of the following characters:
+*jo* first tries to parse *value* as a JSON value. If that fails, it
+treats *value* as a literal string value, unless it begins with one of
+the following characters:
 
 | value | action                                                              |
-| ----- | ------------------------------------------------------------------- |
+|-------|---------------------------------------------------------------------|
 | @file | substitute the contents of *file* as-is                             |
 | %file | substitute the contents of *file* in base64-encoded form            |
 | :file | interpret the contents of *file* as JSON, and substitute the result |
@@ -62,8 +67,8 @@ that there are no more global options.
 
 Type coercion works as follows:
 
-| word       | \-s            | \-n       | \-b       | default        |
-| :--------- | :------------- | :-------- | :-------- | :------------- |
+| word       | -s             | -n        | -b        | default        |
+|:-----------|:---------------|:----------|:----------|:---------------|
 | a=         | "a":""         | "a":0     | "a":false | "a":null       |
 | a=string   | "a":"string"   | "a":6     | "a":true  | "a":"string"   |
 | a="quoted" | "a":""quoted"" | "a":8     | "a":true  | "a":""quoted"" |
@@ -102,15 +107,14 @@ Pretty-print an array with a list of files in the current directory:
      "json.h"
     ]
 
-Create objects within objects; this works because if the first character
-of value is an open brace or a bracket we attempt to decode the
-remainder as JSON. Beware spaces in strings ...
+Create objects within objects. Beware spaces in strings; it's generally
+a good idea to double-quote nested *jo* invocations:
 
-    $ jo -p name=JP object=$(jo fruit=Orange hungry@0 point=$(jo x=10 y=20 list=$(jo -a 1 2 3 4 5)) number=17) sunday@0
+    $ jo -p name=JP object="$(jo fruit=Blood\ Orange hungry@0 point="$(jo x=10 y=20 list="$(jo -a 1 2 3 4 5)")" number=17)" sunday@0
     {
      "name": "JP",
      "object": {
-      "fruit": "Orange",
+      "fruit": "Blood Orange",
       "hungry": false,
       "point": {
        "x": 10,
@@ -134,7 +138,7 @@ the `-B` option disables the default detection of the "`true`",
 
     $ jo switch=true morning@0
     {"switch":true,"morning":false}
-    
+
     $ jo -B switch=true morning@0
     {"switch":"true","morning":false}
 
@@ -186,7 +190,7 @@ Create empty objects or arrays, intentionally or potentially:
 
     $ jo < /dev/null
     {}
-    
+
     $ MY_ARRAY=(a=1 b=2)
     $ jo -a "${MY_ARRAY[@]}" < /dev/null
     ["a=1","b=2"]
@@ -204,7 +208,7 @@ Type coercion:
        "g": 14,
        "h": true
     }
-    
+
     $ jo -a -- -s 123 -n "This is a test" -b C_Rocks 456
     ["123",14,true,456]
 
@@ -214,10 +218,10 @@ it starts with `:` the contents are interpreted as JSON:
 
     $ jo program=jo authors=@AUTHORS
     {"program":"jo","authors":"Jan-Piet Mens <jpmens@gmail.com>"}
-    
+
     $ jo filename=AUTHORS content=%AUTHORS
     {"filename":"AUTHORS","content":"SmFuLVBpZXQgTWVucyA8anBtZW5zQGdtYWlsLmNvbT4K"}
-    
+
     $ jo nested=:nested.json
     {"nested":{"field1":123,"field2":"abc"}}
 
@@ -225,20 +229,20 @@ These characters can be escaped to avoid interpretation:
 
     $ jo name="JP Mens" twitter='\@jpmens'
     {"name":"JP Mens","twitter":"@jpmens"}
-    
+
     $ jo char=" " URIescape=\\%20
     {"char":" ","URIescape":"%20"}
-    
+
     $ jo action="split window" vimcmd="\:split"
     {"action":"split window","vimcmd":":split"}
 
-Read element values from a file in order to overcome ARG\_MAX limits
+Read element values from a file in order to overcome ARG_MAX limits
 during object assignment:
 
     $ ls | jo -a > child.json
     $ jo files:=child.json
     {"files":["AUTHORS","COPYING","ChangeLog" ....
-    
+
     $ ls *.c | jo -a > source.json; ls *.h | jo -a > headers.json
     $ jo -a :source.json :headers.json
     [["base64.c","jo.c","json.c"],["base64.h","json.h"]]
@@ -247,7 +251,7 @@ Add elements to existing JSON:
 
     $ jo -f source.json 1 | jo -f - 2 3
     ["base64.c","jo.c","json.c",1,2,3]
-    
+
     $ curl -s 'https://noembed.com/embed?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ' | jo -f - status=Rickrolled
     { ...., "type":"video","author_url":"https://www.youtube.com/user/RickAstleyVEVO","status":"Rickrolled"}
 
@@ -262,27 +266,34 @@ Deduplicate object keys (*jo* appends duplicate object keys by default):
 
 *jo* understands the following global options.
 
-  - \-a  
-    Interpret the list of *words* as array values and produce an array
-    instead of an object.
-  - \-B  
-    By default, *jo* interprets the strings "`true`" and "`false`" as
-    boolean elements `true` and `false` respectively, and "`null`" as
-    `null`. Disable with this option.
-  - \-D  
-    Deduplicate object keys.
-  - \-e  
-    Ignore empty stdin (i.e. don't produce a diagnostic error when
-    *stdin* is empty)
-  - \-n  
-    Do not add keys with empty values.
-  - \-p  
-    Pretty-print the JSON string on output instead of the terse one-line
-    output it prints by default.
-  - \-v  
-    Show version and exit.
-  - \-V  
-    Show version as a JSON object and exit.
+-a  
+Interpret the list of *words* as array values and produce an array
+instead of an object.
+
+-B  
+By default, *jo* interprets the strings "`true`" and "`false`" as
+boolean elements `true` and `false` respectively, and "`null`" as
+`null`. Disable with this option.
+
+-D  
+Deduplicate object keys.
+
+-e  
+Ignore empty stdin (i.e. don't produce a diagnostic error when *stdin*
+is empty)
+
+-n  
+Do not add keys with empty values.
+
+-p  
+Pretty-print the JSON string on output instead of the terse one-line
+output it prints by default.
+
+-v  
+Show version and exit.
+
+-V  
+Show version as a JSON object and exit.
 
 # BUGS
 
@@ -316,14 +327,14 @@ indicating what caused the failure.
 
 # CREDITS
 
-  - This program uses `json.[ch]`, by Joseph A. Adams.
+- This program uses `json.[ch]`, by Joseph A. Adams.
 
 # SEE ALSO
 
-  - <https://stedolan.github.io/jq/>
-  - <https://github.com/micha/jsawk>
-  - <https://github.com/jtopjian/jsed>
-  - strtod(3)
+- <https://stedolan.github.io/jq/>
+- <https://github.com/micha/jsawk>
+- <https://github.com/jtopjian/jsed>
+- strtod(3)
 
 # AUTHOR
 
